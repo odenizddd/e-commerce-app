@@ -10,7 +10,12 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username, email, password) VALUES 
-('johndoe93', 'johndoe93@example.com', 'Jd@2024Doe!'),
-('sarah.smith', 'sarah.smith@example.com', 'S$mith2024#'),
-('techguru88', 'techguru88@example.com', 'T3chGr88@!');
+CREATE TABLE products (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    stock_quantity INTEGER NOT NULL,
+    brand TEXT NOT NULL,
+    image_url TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
