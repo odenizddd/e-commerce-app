@@ -1,4 +1,12 @@
-import { insertProducts } from "./databaseOperations";
-import { generateMockProductData } from "./mockData";
+import { insertProducts, queryProducts } from "./databaseOperations";
 
-insertProducts(generateMockProductData(10))
+async function main() {
+    try {
+        const products = await queryProducts()
+        console.log(products)
+    } catch (err) {
+        console.log("error: ", err)
+    }
+}
+
+main()
