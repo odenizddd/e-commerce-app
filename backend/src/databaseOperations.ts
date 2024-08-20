@@ -1,5 +1,5 @@
 const { Client } = require('pg')
-import { User } from "./mockData";
+import { User, Product } from "./mockData";
 
 export async function queryUsers(): Promise<void> {
     const client = new Client({
@@ -47,6 +47,41 @@ export async function insertUsers(users: User[]) {
             await client.query(
                 "INSERT INTO users (username, email, password)\
                 VALUES ($1, $2, $3);", [username, email, password])
+        }
+
+        await client.query('COMMIT')
+    } catch(err) {
+        await client.query('ROLLBACK')
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
+    } {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
+
+export async function insertProducts(products: Product[]) {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        await client.query('BEGIN')
+
+        for (const product of products) {
+            const { name, price, stock_quantity, brand, image_url } = product;
+            await client.query(
+                "INSERT INTO products (name, price, stock_quantity, brand, image_url)\
+                VALUES ($1, $2, $3, $4, $5);", [name, price, stock_quantity, brand, image_url])
         }
 
         await client.query('COMMIT')

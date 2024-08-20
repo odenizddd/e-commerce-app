@@ -1,3 +1,4 @@
-import { queryUsers } from "./databaseOperations";
+import { insertProducts } from "./databaseOperations";
+import { generateMockProductData } from "./mockData";
 
-queryUsers()
+insertProducts(generateMockProductData(10))
