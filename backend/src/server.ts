@@ -6,6 +6,9 @@ const port = 3000;
 
 // Define the /products endpoint
 app.get('/products', async (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
     try {
         const products = await queryProducts();
         res.json(products);

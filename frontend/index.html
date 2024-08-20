@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #product-list {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .product {
+            border: 1px solid #ddd;
+            padding: 16px;
+            margin: 16px 0;
+            width: 300px;
+        }
+        .product h2 {
+            margin: 0 0 8px 0;
+        }
+        .product img {
+            width: 250px; /* Set a fixed width for images */
+            height: auto; /* Maintain aspect ratio */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product List</h1>
+    <div id="product-list"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
