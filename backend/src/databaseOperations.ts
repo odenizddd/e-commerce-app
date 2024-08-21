@@ -152,6 +152,39 @@ export async function getCartIdForUser(userId: number) {
             console.log("Connection error: ", err.stack)
         else
             console.log("Unexpected error", err)
+        throw err
+    } finally {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
+
+export async function addProductToCard(cartId: number, productId: number, quantity: number) {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        await client.query('BEGIN')
+
+        await client.query('INSERT INTO cartItems (cart_id, product_id, quantity) VALUES ($1, $2, $3)\
+            ON CONFLICT (cart_id, product_id)\
+            DO UPDATE SET quantity=cartItems.quantity+$3;', [cartId, productId, quantity])
+
+        await client.query('COMMIT')
+    } catch(err) {
+        await client.query('ROLLBACK')
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
     } finally {
         await client.end()
         console.log('Connection closed');

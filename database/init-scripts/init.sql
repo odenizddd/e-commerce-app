@@ -25,3 +25,11 @@ CREATE TABLE carts (
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE cartItems (
+    id SERIAL PRIMARY KEY,
+    cart_id INT REFERENCES carts(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL DEFAULT 1,
+    UNIQUE (cart_id, product_id)
+);
