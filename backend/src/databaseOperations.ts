@@ -124,3 +124,36 @@ export async function insertProducts(products: Product[]) {
         console.log('Connection closed');
     }
 }
+
+export async function getCartIdForUser(userId: number) {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        let cart = await client.query('SELECT id FROM carts WHERE user_id=$1;', [userId])
+
+        if (cart.rows.length === 0) {
+            cart = await client.query('INSERT INTO carts (user_id) VALUES ($1) RETURNING id;', [userId])
+        }
+
+        const cartId = cart.rows[0].id
+        return cartId
+
+    } catch(err) {
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
+    } finally {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
