@@ -1,8 +1,10 @@
 import express from "express";
-import { queryProducts } from "./databaseOperations"
+import { getCartContentsForUser, queryProducts } from "./databaseOperations"
 
 const app = express();
 const port = 3000;
+
+app.use(express.json())
 
 // Define the /products endpoint
 app.get('/products', async (req, res) => {
@@ -17,6 +19,16 @@ app.get('/products', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch products' });
     }
 });
+
+app.get('/cart', async (req, res) => {
+    try {
+        const userId = req.body.userId
+        const cartItems = await getCartContentsForUser(userId)
+        res.status(200).json({cartItems: cartItems.rows})
+    } catch (err) {
+        console.log("Error", err)
+    }
+})
 
 app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
