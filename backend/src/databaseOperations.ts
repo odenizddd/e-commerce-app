@@ -1,4 +1,5 @@
 const { Client } = require('pg')
+import { devNull } from "os";
 import { User, Product } from "./mockData";
 
 export async function queryUsers(): Promise<void> {
@@ -185,6 +186,42 @@ export async function addProductToCard(cartId: number, productId: number, quanti
             console.log("Connection error: ", err.stack)
         else
             console.log("Unexpected error", err)
+    } finally {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
+
+export async function getCartContentsForUser(userId: number) {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        const cartId = await getCartIdForUser(userId)
+
+        const cartItems = await client.query(`
+            SELECT products.*, cartItems.quantity
+            FROM cartItems
+            JOIN products ON cartItems.product_id=products.id
+            WHERE cartItems.cart_id=$1;
+            `, [cartId])
+
+        return cartItems
+
+    } catch(err) {
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
+        throw err
     } finally {
         await client.end()
         console.log('Connection closed');
