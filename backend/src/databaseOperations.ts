@@ -77,7 +77,6 @@ export async function queryProducts(): Promise<Product[]> {
         console.log('Connected to the database.');
 
         const res = await client.query("SELECT * FROM products;")
-        console.log("Products: ", res.rows)
         return res.rows
     } catch(err) {
         if (err instanceof Error)
