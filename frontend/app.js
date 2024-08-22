@@ -24,9 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img src="${product.image_url}" alt="${product.name}" />
                     <h2>${product.name}</h2>
                     <p>Price: $${product.price}</p>
-                    <button class="add-to-cart-button">Add to cart</button>
+                    <button class="add-to-cart-button" data-product-id="${product.id}">Add to cart</button>
                 `;
                 productList.appendChild(productDiv);
+            });
+
+            document.querySelectorAll('.add-to-cart-button').forEach(button => {
+                button.addEventListener('click', addToCart);
             });
         })
         .catch(error => {
@@ -49,6 +53,31 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onclick = function(event) {
         if (event.target === modal) {
             modal.style.display = 'none';
+        }
+    }
+
+    async function addToCart(event) {
+        const productId = event.target.getAttribute('data-product-id');
+        const userId = 1; // Replace with actual user ID
+
+        try {
+            console.log({ userId: userId, productId: parseInt(productId), quantity: 1 })
+            const response = await fetch('http://localhost:3000/cart/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId: userId, productId: productId, quantity: 1 })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to add product to cart');
+            }
+
+            const result = await response.json();
+            console.log('Product added to cart:', result);
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
         }
     }
 

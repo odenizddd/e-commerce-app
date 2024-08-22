@@ -1,10 +1,17 @@
 import express from "express";
-import { getCartContentsForUser, queryProducts } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, queryProducts } from "./databaseOperations"
 
 const app = express();
 const port = 3000;
 
 app.use(express.json())
+// For preflight responses
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.sendStatus(200);
+});
 
 // Define the /products endpoint
 app.get('/products', async (req, res) => {
@@ -20,7 +27,25 @@ app.get('/products', async (req, res) => {
     }
 });
 
+app.post('/cart/add', async (req, res) => {
+    const userId = req.body.userId
+    const productId = req.body.productId
+    const quantity = req.body.quantity
+
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
+    try {
+        await addProductToCard(await getCartIdForUser(userId), productId, quantity)
+        res.status(200).json({status: "success"})
+    } catch (err) {
+        console.log("Error", err)
+        res.status(500).json({error: "Failed to fetch cart items."})
+    }
+})
+
 app.get('/cart', async (req, res) => {
+
     const userIdParam = req.query.userId;
 
     // Convert userId to a number
