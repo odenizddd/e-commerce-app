@@ -12,7 +12,7 @@ app.use(express.json())
 app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     res.sendStatus(200);
 });
 
@@ -20,7 +20,7 @@ app.options('*', (req, res) => {
 app.post('/login', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
-    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
     try {
         const user = await queryUser(req.body.username)
@@ -34,7 +34,7 @@ app.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign({ username: user.username }, jwtSecret)
-        res.status(200).json({ token })
+        res.status(200).json({ token, username: user.username })
     } catch (err) {
         return res.status(400).json({ error: "Database error." })
     }
@@ -67,7 +67,7 @@ const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) =
 app.get('/products', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
-    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     try {
         const products = await queryProducts();
         res.json(products);
@@ -78,6 +78,10 @@ app.get('/products', async (req, res) => {
 });
 
 app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
     if (typeof req.user !== 'object' || req.user === null) {
         return res.status(400).json({ error: "User not found." })
     }
@@ -88,9 +92,6 @@ app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
     const productId = req.body.productId
     const quantity = req.body.quantity
 
-    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
-    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
     try {
         const userId = await getUserIdForUsername(username)
         console.log(userId)
@@ -102,21 +103,19 @@ app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
     }
 })
 
-app.get('/cart', async (req, res) => {
+app.get('/cart', authMiddleware, async (req: CustomRequest, res) => {
 
-    const userIdParam = req.query.userId;
-
-    // Convert userId to a number
-    const userId = userIdParam ? parseInt(userIdParam as string, 10) : undefined;
-
-    if (userId === undefined || isNaN(userId)) {
-        return res.status(400).json({ error: 'Invalid or missing userId' });
+    if (typeof req.user !== 'object' || req.user === null) {
+        return res.status(400).json({ error: "User not found." })
     }
+
+    const username = req.user.username
 
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
-    res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     try {
+        const userId = await getUserIdForUsername(username)
         const cartItems = await getCartContentsForUser(userId);
         res.status(200).json({cartItems: cartItems.rows})
     } catch (err) {

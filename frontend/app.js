@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
     const productList = document.getElementById('product-list');
     const cartButton = document.getElementById('cartButton');
     const modal = document.getElementById('cartModal');
@@ -62,10 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             console.log({ userId: userId, productId: parseInt(productId), quantity: 1 })
+            const token = localStorage.getItem('token')
             const response = await fetch('http://localhost:3000/cart/add', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ userId: userId, productId: productId, quantity: 1 })
             });
@@ -84,7 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchCart() {
         try {
             const userId = 1 // Replace with actual user ID
-            const response = await fetch(`http://localhost:3000/cart?userId=${userId}`);
+            const token = localStorage.getItem("token")
+            const response = await fetch(`http://localhost:3000/cart?userId=${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const cartItems = await response.json();
 
             displayCart(cartItems.cartItems);

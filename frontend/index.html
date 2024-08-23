@@ -85,6 +85,7 @@
 <body>
     <h1>Product List</h1>
     <button id="cartButton">View Cart</button>
+    <button id="loginButton">Login</button>
     <div id="product-list"></div>
 
     <!-- The Modal -->
@@ -96,6 +97,13 @@
         </div>
     </div>
 
+    <script>
+        const loginButton = document.getElementById('loginButton')
+        loginButton.onclick = (event) => {
+            console.log('here')
+            window.location.href = 'login.html'
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
