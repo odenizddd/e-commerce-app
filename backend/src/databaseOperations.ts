@@ -28,6 +28,37 @@ export async function queryUsers(): Promise<void> {
     }
 }
 
+export async function queryUser(username: string): Promise<User|null> {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        const res = await client.query("SELECT * FROM users WHERE username=$1;", [username])
+        if (res.rows.length === 0) return null
+        else {
+            const user = res.rows[0]
+            return { username: user.username, email: user.email, password: user.password }
+        }
+    } catch(err) {
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
+        throw err
+    } finally {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
+
 export async function insertUsers(users: User[]) {
     const client = new Client({
         user: "postgres", // Default superuser
