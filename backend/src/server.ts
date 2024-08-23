@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, queryProducts, queryUser } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getUserIdForUsername, queryProducts, queryUser } from "./databaseOperations"
 
 const app = express();
 const port = 3000;
@@ -41,7 +41,11 @@ app.post('/login', async (req, res) => {
 })
 
 interface CustomRequest extends Request {
-    user?: string | JwtPayload
+    user?: string | JwtPayloadWithUserData
+}
+
+interface JwtPayloadWithUserData extends JwtPayload {
+    username: string
 }
 
 const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -51,7 +55,7 @@ const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) =
     }
 
     try {
-        const decoded = jwt.verify(token, jwtSecret)
+        const decoded = jwt.verify(token, jwtSecret) as JwtPayloadWithUserData
         req.user = decoded
         next()
     } catch (err) {
@@ -73,8 +77,14 @@ app.get('/products', async (req, res) => {
     }
 });
 
-app.post('/cart/add', async (req, res) => {
-    const userId = req.body.userId
+app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
+    if (typeof req.user !== 'object' || req.user === null) {
+        return res.status(400).json({ error: "User not found." })
+    }
+
+    const username = req.user.username
+
+    // const userId = req.body.userId
     const productId = req.body.productId
     const quantity = req.body.quantity
 
@@ -82,6 +92,8 @@ app.post('/cart/add', async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
     res.header('Access-Control-Allow-Headers', 'Content-Type'); // Allow specific headers
     try {
+        const userId = await getUserIdForUsername(username)
+        console.log(userId)
         await addProductToCard(await getCartIdForUser(userId), productId, quantity)
         res.status(200).json({status: "success"})
     } catch (err) {

@@ -156,6 +156,39 @@ export async function insertProducts(products: Product[]) {
     }
 }
 
+export async function getUserIdForUsername(username: string) {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    try {
+        await client.connect();
+        console.log('Connected to the database.');
+
+        const usernameSearch = await client.query('SELECT id FROM users WHERE username=$1', [username])
+
+        if (usernameSearch.rows.length === 0) {
+            throw Error('User not found.')
+        }
+
+        return usernameSearch.rows[0].id
+
+    } catch(err) {
+        if (err instanceof Error)
+            console.log("Connection error: ", err.stack)
+        else
+            console.log("Unexpected error", err)
+        throw err
+    } finally {
+        await client.end()
+        console.log('Connection closed');
+    }
+}
+
 export async function getCartIdForUser(userId: number) {
     const client = new Client({
         user: "postgres", // Default superuser
