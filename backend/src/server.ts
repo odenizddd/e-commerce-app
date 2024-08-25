@@ -3,7 +3,6 @@ import jwt, { JwtPayload } from "jsonwebtoken"
 import { addProductToCard, getCartContentsForUser, getCartIdForUser, getUserIdForUsername, queryProducts, queryUser } from "./databaseOperations"
 
 const app = express();
-const port = 3000;
 
 const jwtSecret = "my_secret"
 
@@ -124,6 +123,4 @@ app.get('/cart', authMiddleware, async (req: CustomRequest, res) => {
     }
 })
 
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-});
+module.exports = app
