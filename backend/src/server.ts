@@ -43,14 +43,14 @@ interface CustomRequest extends Request {
     user?: string | JwtPayloadWithUserData
 }
 
-interface JwtPayloadWithUserData extends JwtPayload {
+export interface JwtPayloadWithUserData extends JwtPayload {
     username: string
 }
 
 const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1]
     if (!token) {
-        return res.status(400).json({ error: "No token provided." })
+        return res.status(401).json({ error: "No token provided." })
     }
 
     try {
@@ -58,7 +58,7 @@ const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) =
         req.user = decoded
         next()
     } catch (err) {
-        res.status(401).json({ error: "Invalid token." })
+        return res.status(401).json({ error: "Invalid token." })
     }
 }
 
