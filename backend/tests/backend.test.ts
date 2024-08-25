@@ -1,8 +1,15 @@
 const request = require('supertest')
 const test_app = require('../src/server')
 
-describe('Login', () => {
-    let token
+describe('Login endpoint', () => {
+
+    beforeEach(() => {
+        jest.spyOn(console, 'log').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+        jest.restoreAllMocks()
+    })
 
     it('should return a token upon successful login', async () => {
         const response = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "VjYRgalsfQxxs6W" })
