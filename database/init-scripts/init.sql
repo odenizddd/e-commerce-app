@@ -33,3 +33,17 @@ CREATE TABLE cartItems (
     quantity INT NOT NULL DEFAULT 1,
     UNIQUE (cart_id, product_id)
 );
+
+CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orderItems (
+    id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(id),
+    quantity INT NOT NULL,
+    UNIQUE (order_id, product_id)
+);

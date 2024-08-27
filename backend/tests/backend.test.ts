@@ -6,6 +6,11 @@ import jwt, { JwtPayload } from "jsonwebtoken"
 import { JwtPayloadWithUserData } from "./server"
 import { getCartContentsForUser, getCartIdForUser, getUserIdForUsername } from "../src/databaseOperations"
 
+const testUser = {
+    username: "Macie16",
+    password: "fk7BhID3nAgWt0c"
+}
+
 describe('POST /login', () => {
 
     beforeAll(() => {
@@ -17,7 +22,7 @@ describe('POST /login', () => {
     })
 
     it('should return a token upon successful login', async () => {
-        const response = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "VjYRgalsfQxxs6W" })
+        const response = await request(test_app).post('/login').send({ username: testUser.username, password: testUser.password })
 
         expect(response.status).toBe(200)
         expect(response.body.token).toBeTruthy()
@@ -31,7 +36,7 @@ describe('POST /login', () => {
     })
 
     it('should deny access when incorrect password is provided', async () => {
-        const response = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "random_password" })
+        const response = await request(test_app).post('/login').send({ username: testUser.username, password: "random_password" })
 
         expect(response.status).toBe(401)
         expect(response.body.error).toBe("Wrong password.")
@@ -94,7 +99,7 @@ describe('GET /cart', () => {
     beforeAll(async () => {
         jest.spyOn(console, 'log').mockImplementation(() => {})
 
-        const loginResponse = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "VjYRgalsfQxxs6W" })
+        const loginResponse = await request(test_app).post('/login').send({ username: testUser.username, password: testUser.password })
 
         expect(loginResponse.status).toBe(200)
         expect(loginResponse.body.token).toBeTruthy()
@@ -143,7 +148,7 @@ describe('GET /cart alternative', () => {
     beforeAll(async () => {
         jest.spyOn(console, 'log').mockImplementation(() => {})
 
-        const loginResponse = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "VjYRgalsfQxxs6W" })
+        const loginResponse = await request(test_app).post('/login').send({ username: testUser.username, password: testUser.password })
 
         expect(loginResponse.status).toBe(200)
         expect(loginResponse.body.token).toBeTruthy()
@@ -181,7 +186,7 @@ describe('POST /cart/add', () => {
     beforeAll(async () => {
         jest.spyOn(console, 'log').mockImplementation(() => {})
 
-        const loginResponse = await request(test_app).post('/login').send({ username: "Arlie_Lang19", password: "VjYRgalsfQxxs6W" })
+        const loginResponse = await request(test_app).post('/login').send({ username: testUser.username, password: testUser.password })
 
         expect(loginResponse.status).toBe(200)
         expect(loginResponse.body.token).toBeTruthy()
