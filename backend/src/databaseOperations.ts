@@ -1,6 +1,17 @@
 const { Client } = require('pg')
-import { devNull } from "os";
-import { User, Product } from "./mockData";
+import { User, Product, Rating, Review } from "./mockData";
+
+export function getClient() {
+    const client = new Client({
+        user: "postgres", // Default superuser
+        host: "localhost", // Since database is hosted on the same machine
+        database: "testdb", // See init.sql
+        password: "postgres123", // See init.sql
+        port: 5432
+    })
+
+    return client
+}
 
 export async function queryUsers(): Promise<void> {
     const client = new Client({
@@ -398,3 +409,42 @@ export async function getOrderContentsForOrder(orderId: number): Promise<void> {
     }
 }
 
+export async function insertRatings(ratings: Rating[]): Promise<void> {
+    const client = getClient()
+    try {
+        await client.connect()
+        await client.query('BEGIN')
+
+        await client.query(`INSERT INTO ratings (rating, user_id, product_id) VALUES ${ratings.map((ratingObj: Rating): string => {return `(${ratingObj.rating}, ${ratingObj.userId}, ${ratingObj.productId})`}).join(',')};`)
+
+        await client.query('COMMIT')
+    } catch (err) {
+        await client.query('ROLLBACK')
+        if (err instanceof Error) 
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        client.end()
+    }
+}
+
+export async function insertReviews(reviews: Review[]): Promise<void> {
+    const client = getClient()
+    try {
+        await client.connect()
+        await client.query('BEGIN')
+
+        await client.query(`INSERT INTO reviews (review_text, user_id, product_id) VALUES ${reviews.map((reviewObj: Review): string => {return `('${reviewObj.text}', ${reviewObj.userId}, ${reviewObj.productId})`}).join(',')};`)
+
+        await client.query('COMMIT')
+    } catch (err) {
+        await client.query('ROLLBACK')
+        if (err instanceof Error) 
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        client.end()
+    }
+}
