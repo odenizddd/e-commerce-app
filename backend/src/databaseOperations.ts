@@ -448,3 +448,47 @@ export async function insertReviews(reviews: Review[]): Promise<void> {
         client.end()
     }
 }
+
+export async function getRatings(userId?: number | undefined, productId?: number | undefined) {
+    const client = getClient()
+    try {
+        await client.connect()
+
+        let queryString = `SELECT * FROM ratings \
+        ${(userId || productId) ? 'WHERE TRUE' : ''}\
+        ${userId ? 'AND user_id=' + userId.toString() : ''}\
+        ${productId ? 'AND product_id=' + productId.toString() : ''};`
+
+        const getRatingsQuery = await client.query(queryString)
+        return getRatingsQuery.rows
+    } catch(err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        client.end()
+    }
+}
+
+export async function getReviews(userId?: number | undefined, productId?: number | undefined) {
+    const client = getClient()
+    try {
+        await client.connect()
+
+        let queryString = `SELECT * FROM reviews \
+        ${(userId || productId) ? 'WHERE TRUE' : ''}\
+        ${userId ? 'AND user_id=' + userId.toString() : ''}\
+        ${productId ? 'AND product_id=' + productId.toString() : ''};`
+
+        const getReviewsQuery = await client.query(queryString)
+        return getReviewsQuery.rows
+    } catch(err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        client.end()
+    }
+}
