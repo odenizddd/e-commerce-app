@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getRatings, getUserIdForUsername, queryProducts, queryUser } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser } from "./databaseOperations"
 
 const app = express();
 
@@ -138,6 +138,24 @@ app.get('/ratings', async (req: Request<{}, {}, {}, {userId?: number, productId?
     } catch (err) {
         console.log('Error', err)
         return res.status(500).json({error: 'Failed to fetch ratings.'})
+    }
+})
+
+app.get('/reviews', async (req: Request<{}, {}, {}, {userId?: number, productId?: number}>, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+    const client = getClient()
+    try {
+        await client.connect()
+
+        const { userId, productId } = req.query
+        return res.status(200).json({ratings: await getReviews(userId, productId)})
+
+    } catch (err) {
+        console.log('Error', err)
+        return res.status(500).json({error: 'Failed to fetch reviews.'})
     }
 })
 
