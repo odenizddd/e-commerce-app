@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateProductQuantityInCard } from "./databaseOperations"
 
 const app = express();
 
@@ -39,7 +39,7 @@ app.post('/login', async (req, res) => {
     }
 })
 
-interface CustomRequest extends Request {
+interface CustomRequest<Params={}, ResBody=any, ReqBody=any> extends Request<Params, ResBody, ReqBody> {
     user?: string | JwtPayloadWithUserData
 }
 
@@ -93,7 +93,6 @@ app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
 
     try {
         const userId = await getUserIdForUsername(username)
-        console.log(userId)
         await addProductToCard(await getCartIdForUser(userId), productId, quantity)
         res.status(200).json({status: "success"})
     } catch (err) {
@@ -157,6 +156,33 @@ app.get('/reviews', async (req: Request<{}, {}, {}, {userId?: number, productId?
         console.log('Error', err)
         return res.status(500).json({error: 'Failed to fetch reviews.'})
     }
+})
+
+app.post('/cart/:productId', authMiddleware, async (req: CustomRequest<{productId: number}, {}, {quantity: number}>, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+    if (typeof req.user !== 'object' || req.user === null) {
+        return res.status(400).json({ error: "User not found." })
+    }
+
+    const username = req.user.username
+    const productId = req.params.productId
+    const quantity = req.body.quantity
+
+    try {
+        const userId = await getUserIdForUsername(username)
+        await updateProductQuantityInCard(userId, productId, quantity)
+        res.status(200).json({ status: "success" })
+    } catch (err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+        res.status(500).json({ error: "Failed to update shopping cart." })
+    }
+    
 })
 
 module.exports = app
