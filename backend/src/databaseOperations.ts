@@ -492,3 +492,45 @@ export async function getReviews(userId?: number | undefined, productId?: number
         client.end()
     }
 }
+
+export async function updateProductQuantityInCard(userId: number, productId: number, quantity: number) {
+    const client = getClient()
+    try {
+        await client.connect()
+
+        await client.query('BEGIN')
+
+        // Get the cart id for the user, if there isn't a cart, create it.
+        const cartIdRows = (await client.query('SELECT * FROM carts WHERE user_id=$1;', [userId])).rows
+        let cartId;
+        if (cartIdRows.length === 0) {
+            cartId = (await client.query('INSERT INTO carts (user_id) VALUES ($1) RETURNING id;', [userId])).rows[0].id
+        } else {
+            cartId = cartIdRows[0].id
+        }
+
+        if (quantity <= 0) {
+            // Delete item from the shopping cart
+            await client.query('DELETE FROM cartItems WHERE cart_id=$1 AND product_id=$2', [cartId, productId])
+        } else {
+            const cartItemIdRows = (await client.query('SELECT * FROM cartItems WHERE cart_id=$1 AND product_id=$2;', [cartId, productId])).rows
+            if (cartItemIdRows.length === 0) {
+                // Create new item
+                await client.query('INSERT INTO cartItems (cart_id, product_id, quantity) VALUES ($1, $2, $3);', [cartId, productId, quantity])
+            } else {
+                // Update existing item
+                await client.query('UPDATE cartItems SET quantity=$1 WHERE cart_id=$2 AND product_id=$3;', [quantity, cartId, productId])
+            }
+        }
+
+        await client.query('COMMIT')
+    } catch (err) {
+        await client.query('ROLLBACK')
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        client.end()
+    }
+}

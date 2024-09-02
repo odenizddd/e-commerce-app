@@ -1,10 +1,9 @@
-import { addProductToCard, createOrderForUser, getCartContentsForUser, getCartIdForUser, getOrderContentsForOrder, getOrdersForUser, getRatings, getReviews, getUserIdForUsername } from "./databaseOperations"
+import { addProductToCard, createOrderForUser, getCartContentsForUser, getCartIdForUser, getOrderContentsForOrder, getOrdersForUser, getRatings, getReviews, getUserIdForUsername, updateProductQuantityInCard } from "./databaseOperations"
 
 const username = "Jade_Nienow38"
 
 const main = async () => {
-    const reviews = await getRatings(2,1)
-    console.log(reviews)
+    await updateProductQuantityInCard(3, 2, -1)
 }
 
 main()
