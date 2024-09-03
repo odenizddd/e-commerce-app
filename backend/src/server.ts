@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateProductQuantityInCard } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getProduct, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateProductQuantityInCard } from "./databaseOperations"
 
 const app = express();
 
@@ -75,6 +75,22 @@ app.get('/products', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch products' });
     }
 });
+
+app.get('/products/:productId', async (req: Request<{ productId: number }>, res: Response) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    const productId = req.params.productId
+
+    try {
+        const productDetails = await getProduct(productId)
+        res.status(200).json({ productDetails: productDetails })
+    } catch (err) {
+        console.log('Error', err)
+        res.status(500).json({ error: 'Failed to fetch product details.' })
+    }
+})
 
 app.post('/cart/add', authMiddleware, async (req: CustomRequest, res) => {
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins, adjust as needed

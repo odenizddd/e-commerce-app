@@ -534,3 +534,23 @@ export async function updateProductQuantityInCard(userId: number, productId: num
         client.end()
     }
 }
+
+export async function getProduct(productId: number) {
+    const client = getClient()
+    try {
+        await client.connect()
+
+        const productQueryRows = (await client.query('SELECT * FROM products WHERE id=$1;', [productId])).rows
+        console.log('here')
+        if (productQueryRows.length === 0) throw new Error('Product not found.')
+        return productQueryRows[0]
+
+    } catch (err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        await client.end()
+    }
+}
