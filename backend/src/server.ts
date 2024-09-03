@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getProduct, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateLastLogin, updateProductQuantityInCard } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getProduct, getRatings, getReviews, getUserIdForUsername, insertUsers, queryProducts, queryUser, updateLastLogin, updateProductQuantityInCard } from "./databaseOperations"
 
 const app = express();
 
@@ -63,7 +63,7 @@ const authMiddleware = async (req: CustomRequest, res: Response, next: NextFunct
         const timestamp = new Date((decoded.iat - 10800) * 1000)
 
         const user = await queryUser(decoded.username)
-        if (!timestamp || user === null) {
+        if (!timestamp || user === null || !user.last_login || !user.last_logout) {
             throw new Error('Error')
         }
         
@@ -245,6 +245,20 @@ app.post('/logout', authMiddleware, async (req: CustomRequest, res: Response) =>
         return res.status(500).json({ error: 'Failed to logout.' })
     } finally {
         await client.end()
+    }
+})
+
+app.post('/register', async (req: CustomRequest<{}, {}, { username: string, password: string, email: string }>, res: Response) => {
+    const { username, password, email } = req.body
+
+    try {
+        await insertUsers([{ username, password, email }])
+        const token = jwt.sign({ username: username, iat: Math.floor(Date.now() / 1000) + 10 }, jwtSecret)
+        res.status(200).json({ username, token })
+    } catch (err) {
+        if (err instanceof Error) console.log('Error', err.stack)
+        else console.log('Error', err)
+        res.status(500).json({ error: 'Failed to create user.' })
     }
 })
 

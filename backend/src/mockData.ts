@@ -5,8 +5,8 @@ export interface User {
     username: string,
     email: string,
     password: string,
-    last_login: number,
-    last_logout: number
+    last_login?: number,
+    last_logout?: number
 }
 export interface Product {
     name: string,
