@@ -56,7 +56,7 @@ export async function queryUser(username: string): Promise<User|null> {
         if (res.rows.length === 0) return null
         else {
             const user = res.rows[0]
-            return { username: user.username, email: user.email, password: user.password }
+            return user
         }
     } catch(err) {
         if (err instanceof Error)
@@ -544,6 +544,23 @@ export async function getProduct(productId: number) {
         console.log('here')
         if (productQueryRows.length === 0) throw new Error('Product not found.')
         return productQueryRows[0]
+
+    } catch (err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+    } finally {
+        await client.end()
+    }
+}
+
+export async function updateLastLogin(username: string) {
+    const client = getClient()
+    try {
+        await client.connect()
+
+        await client.query(`UPDATE users SET last_login=CURRENT_TIMESTAMP WHERE username='${username}';`)
 
     } catch (err) {
         if (err instanceof Error)

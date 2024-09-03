@@ -4,7 +4,9 @@ const { faker } = require('@faker-js/faker')
 export interface User {
     username: string,
     email: string,
-    password: string
+    password: string,
+    last_login: number,
+    last_logout: number
 }
 export interface Product {
     name: string,
@@ -32,7 +34,9 @@ export function generateMockUserData(count: number): User[] {
         const user: User = {
             username: faker.internet.userName(),
             email: faker.internet.email(),
-            password: faker.internet.password()
+            password: faker.internet.password(),
+            last_login: Math.floor(Date.now() / 1000),
+            last_logout: Math.floor(Date.now() / 1000)
         }
         users.push(user)
     }

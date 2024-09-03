@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken"
-import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getProduct, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateProductQuantityInCard } from "./databaseOperations"
+import { addProductToCard, getCartContentsForUser, getCartIdForUser, getClient, getProduct, getRatings, getReviews, getUserIdForUsername, queryProducts, queryUser, updateLastLogin, updateProductQuantityInCard } from "./databaseOperations"
 
 const app = express();
 
@@ -32,7 +32,11 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ error: "Wrong password." })
         }
 
-        const token = jwt.sign({ username: user.username }, jwtSecret)
+        // TODO: Update last login time
+        // There is weird thing going on. iat is before last login
+        await updateLastLogin(user.username)
+
+        const token = jwt.sign({ username: user.username, iat: Math.floor(Date.now() / 1000) + 10 }, jwtSecret)
         res.status(200).json({ token, username: user.username })
     } catch (err) {
         return res.status(400).json({ error: "Database error." })
@@ -47,7 +51,7 @@ export interface JwtPayloadWithUserData extends JwtPayload {
     username: string
 }
 
-const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) => {
+const authMiddleware = async (req: CustomRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1]
     if (!token) {
         return res.status(401).json({ error: "No token provided." })
@@ -55,9 +59,28 @@ const authMiddleware = (req: CustomRequest, res: Response, next: NextFunction) =
 
     try {
         const decoded = jwt.verify(token, jwtSecret) as JwtPayloadWithUserData
-        req.user = decoded
+        if (!decoded.iat) throw new Error()
+        const timestamp = new Date((decoded.iat - 10800) * 1000)
+
+        const user = await queryUser(decoded.username)
+        if (!timestamp || user === null) {
+            throw new Error('Error')
+        }
+        
+        // TODO: There is a mismatch in timezones
+        const last_login = new Date(user.last_login)
+        const last_logout = new Date(user.last_logout)
+
+        console.log('Timestamp', timestamp)
+        console.log('Last login', last_login)
+        console.log('Last logout', last_logout)
+        if (timestamp < last_login || timestamp < last_logout) throw new Error('Expired token.')
+
+        req.user = { username: decoded.username }
         next()
     } catch (err) {
+        if (err instanceof Error) console.log('Error:', err.message)
+        else console.log('Error:', err)
         return res.status(401).json({ error: "Invalid token." })
     }
 }
@@ -199,6 +222,30 @@ app.post('/cart/:productId', authMiddleware, async (req: CustomRequest<{productI
         res.status(500).json({ error: "Failed to update shopping cart." })
     }
     
+})
+
+app.post('/logout', authMiddleware, async (req: CustomRequest, res: Response) => {
+    if (typeof req.user !== 'object' || req.user === null) {
+        return res.status(400).json({ error: "User not found." })
+    }
+
+    const username = req.user.username
+
+    const client = getClient()
+    try {
+        await client.connect()
+
+        await client.query(`UPDATE users SET last_logout=CURRENT_TIMESTAMP WHERE username='${username}';`)
+        return res.status(200).json({ status: 'success' })
+    } catch (err) {
+        if (err instanceof Error)
+            console.log('Error', err.stack)
+        else
+            console.log('Error', err)
+        return res.status(500).json({ error: 'Failed to logout.' })
+    } finally {
+        await client.end()
+    }
 })
 
 module.exports = app
